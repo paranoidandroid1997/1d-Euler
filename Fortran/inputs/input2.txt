@@ -1,0 +1,37 @@
+# Please put your runtime parameters: 
+# name, and a space, followed by values 
+
+# sim variables
+sim_name 'sod_fog'
+IC_type "sod"
+sim_cfl 0.8 
+sim_tmax 0.2
+sim_nStep 100000
+sim_riemann 'hll'
+sim_limiter 'minmod'
+sim_charLimiting .true.
+sim_order 2
+
+# grid variables
+gr_nx 128
+gr_ngc 3
+gr_xbeg 0.0
+gr_xend 1.0
+
+# problem specific physical IC
+sim_shockLoc1 0.5
+sim_densL 1.0
+sim_velxL 0.0 #-2. #0.
+sim_presL 1.0 #0.4 #1.
+sim_densR 0.125 #0.125
+sim_velxR 0.0 #0.
+sim_presR 0.1 #0.1
+sim_gamma 1.4
+sim_smallPres 1.e-12
+
+# BC type
+sim_bcType 'outflow'
+
+# IO frequency
+sim_ioTfreq 0.01 #real
+sim_ioNfreq 10    #positive integer; zero or negative if not used

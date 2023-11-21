@@ -1,0 +1,55 @@
+########################################################################################
+
+#MAKE FILE FOR MHD SOLVER
+#WRITTEN BY DONGWOOK LEE
+#LAST UPDATE ON 05/03/2004
+
+########################################################################################
+
+#FC	 = ifort
+FC	= gfortran -O3
+EXE_FILE = euler1d
+OBJS	 = driver_Euler1d.o grid_init.o simulation.o cflcond.o riemann.o avgstate.o eigensys.o \
+	   primconflx.o bcond.o entropy.o mhd_update.o resultout.o sweeps.o muscl.o
+
+########################################################################################
+#COMPILING AND LINKING USING GENERIC SUFFIX RULE FOR F90
+
+$(EXE_FILE) : $(OBJS)
+	@$(FC) $(OBJS) -o $(EXE_FILE)
+	@echo "now linking..."
+
+#LET'S APPLY GENERIC SUFFIX RULE HERE FOR FORTRAN 90
+.SUFFIXES : 
+.SUFFIXES : .f90 .o
+
+.f90.o:
+	$(FC) -c $<
+
+#######################################################################################
+#SOME USEFUL COMMANDS
+clean:
+	@rm -f *.o *.mod *~ euler1d
+
+mvdata:
+	@mv *.dat $(PWD)/DATA
+
+rmdata:
+	@rm $(PWD)/*.dat
+
+#######################################################################################
+#LET'S DEFINE SOME MODULE DEPENDENCIES!
+
+driver_Euler1d.o : cflcond.o simulation.o grid_init.o resultout.o sweeps.o
+sweeps.o      : bcond.o grid_init.o mhd_update.o primconflx.o riemann.o simulation.o cflcond.o \
+	        muscl.o
+bcond.o       : grid_init.o
+simulation.o  : bcond.o grid_init.o 
+output.o      : grid_init.o simulation.o
+cflcond.o     : grid_init.o simulation.o
+mhd_update.o  : grid_init.o simulation.o cflcond.o
+primconflx.o  : simulation.o
+riemann.o     : cflcond.o simulation.o primconflx.o avgstate.o eigensys.o  entropy.o
+muscl.o	      : grid_init.o simulation.o cflcond.o bcond.o
+
+#######################################################################################

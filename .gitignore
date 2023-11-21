@@ -1,0 +1,11 @@
+*.mod
+*.out
+*.exe
+slugEuler1d
+
+*.dat
+
+*.icloud*
+*.DS_Store*
+
+.venv
