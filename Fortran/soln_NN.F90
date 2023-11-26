@@ -24,8 +24,6 @@ subroutine soln_NN(dt)
 
     integer :: classification
 
-    real (kind = 8), dimension(gr_nx + 2 * gr_ngc) :: predictions
-
     real(kind = 8), dimension(8, 1) :: input
 
     do i = gr_ibeg-1, gr_iend+1
@@ -41,7 +39,6 @@ subroutine soln_NN(dt)
             gr_vR(DENS_VAR:GAME_VAR,i) = gr_V(DENS_VAR:GAME_VAR,i)
 
         else
-            !print *, "not shock"
             ! we need conservative eigenvectors
             conservative = .false.
 

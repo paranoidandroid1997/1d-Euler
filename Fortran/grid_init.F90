@@ -43,5 +43,7 @@ subroutine grid_init()
   allocate(gr_leigvc(NSYS_VAR,NUMB_WAVE,gr_imax)); gr_leigvc = 0.
   allocate(gr_reigvc(NSYS_VAR,NUMB_WAVE,gr_imax)); gr_reigvc = 0.
   
+  allocate(predictions(gr_imax)); predictions = 0.
+
   return
 end subroutine grid_init

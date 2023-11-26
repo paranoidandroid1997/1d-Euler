@@ -17,6 +17,8 @@ subroutine grid_finalize()
   if (allocated(gr_leigvc) .eqv. .true.) deallocate(gr_leigvc)
   if (allocated(gr_reigvc) .eqv. .true.) deallocate(gr_reigvc)
 
+  if (allocated(gr_reigvc) .eqv. .true.) deallocate(predictions)
+
   
   return
 end subroutine grid_finalize
