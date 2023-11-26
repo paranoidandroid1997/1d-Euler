@@ -8,4 +8,6 @@ slugEuler1d
 *.icloud*
 *.DS_Store*
 
+*.o
+
 .venv
