@@ -11,3 +11,5 @@ slugEuler1d
 *.o
 
 .venv
+
+fort.*
