@@ -24,7 +24,7 @@ subroutine soln_NN(dt)
 
     integer :: classification
 
-    real (kind = 8)
+    real (kind = 8), dimension(gr_nx + 2 * gr_ngc) :: predictions
 
     real(kind = 8), dimension(8, 1) :: input
 
@@ -33,6 +33,7 @@ subroutine soln_NN(dt)
         input(1:7,1) = gr_V(PRES_VAR, (i - 3):(i + 3 + 1))
         input(8, 1) = gr_dx
         call classify(input, classification)
+        predictions(i) = classification
 
         if (classification == 1 ) then
             !print *, "shock"
@@ -132,6 +133,7 @@ subroutine soln_NN(dt)
 
         end if
     end do
+    
     
     return
 end subroutine soln_NN
