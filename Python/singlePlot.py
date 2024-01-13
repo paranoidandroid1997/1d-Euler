@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     #for r in range(0, numRuns):
     # for r in range(0, numRuns):
-    for r in range(21, 22):
+    for r in range(21, 23):
         # Clean the current output
         os.chdir("../Fortran/data/")
         os.system("rm *.dat")
@@ -67,6 +67,7 @@ if __name__ == "__main__":
 
         A = np.loadtxt(finalFile)
         x = A[:, 0]
+        preds = A[:,-1]
 
         fig, axs = plt.subplots(3,1)
 
@@ -74,7 +75,14 @@ if __name__ == "__main__":
             var = A[:, (i + 1)]
 
             #ax.plot(x, var, "r--o",markerfacecolor="none")
-            ax.plot(x, var, markerfacecolor="none")
+            ax.plot(x, var, linestyle="--", markerfacecolor="none")
+            for x_val, var_val, pred in zip(x, A[:, (i+1)], preds):
+                if (pred == 1):
+                    c = "red"
+                else:
+                    c = "blue"
+                ax.plot(x_val, var_val, marker='o' ,markeredgecolor=c, markerfacecolor="none")
+
             ax.set_xlabel("X", size=16)
             ax.set_ylabel(symbol, size=16)
             #ax.set_title(name, size=18)

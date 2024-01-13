@@ -2,7 +2,7 @@ module io
 
 #include "definition.h"
   
-  use grid_data, only : gr_xCoord, gr_V, gr_ibeg, gr_iend
+  use grid_data, only : gr_xCoord, gr_V, gr_ibeg, gr_iend, predictions
   use sim_data, only : sim_name
   implicit none
 
@@ -30,12 +30,12 @@ contains
 
     open(unit=20,file=ofile,status='unknown')
     do i=gr_ibeg,gr_iend
-       write(20,920)gr_xCoord(i),(gr_V(nVar,i),nVar=1,NUMB_VAR)
+       write(20,920)gr_xCoord(i),(gr_V(nVar,i),nVar=1,NUMB_VAR), predictions(i)
     end do
 
     
 910 format(i5)
-920 format(1x,f16.8,1x,NUMB_VAR f32.16)
+920 format(1x,f16.8,1x,NUMB_VAR f32.16, 1x, I1)
     
     close(20)
   end subroutine io_writeOutput

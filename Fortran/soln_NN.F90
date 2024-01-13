@@ -24,12 +24,30 @@ subroutine soln_NN(dt)
 
     integer :: classification
 
-    real(kind = 8), dimension(8, 1) :: input
+    real(kind = 8), dimension(20, 1) :: input
+    real(kind = 8), dimension(gr_imax) :: scaledPres
+    real(kind = 8), dimension(gr_imax) :: div
+    real(kind = 8) :: minPres, maxPres
 
+    minPres = minval(gr_V(PRES_VAR, :))
+    maxPres = maxval(gr_V(PRES_VAR, :))
+    scaledPres = -1.0 + ( scaledPres -  minPres) * 2.0 / (maxPres - minPres)
+
+
+    div = 0
+    div(2:(gr_imax - 1)) = (gr_V(VELX_VAR, 3:gr_imax) - gr_V(VELX_VAR, 1:(gr_imax - 2)))/(2.0 * gr_dx)
+    
     do i = gr_ibeg-1, gr_iend+1
 
-        input(1:7,1) = gr_V(PRES_VAR, (i - 3):(i + 3 + 1))
-        input(8, 1) = gr_dx
+        ! input(1:7,1) = scaledPres((i - 3):(i + 3 + 1))
+        ! input(8, 1) = gr_dx
+        ! call classify(input, classification)
+        ! predictions(i) = classification
+
+        input(1:5,1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+        input(6:10,1) = gr_V(VELX_VAR, (i - 2):(i + 2))
+        input(11:15,1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+        input(16:20,1) = div((i - 2):(i + 2))
         call classify(input, classification)
         predictions(i) = classification
 

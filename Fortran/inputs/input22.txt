@@ -13,19 +13,19 @@ sim_charLimiting .true.
 sim_order 7
 
 # grid variables
-gr_nx 512
-gr_ngc 3
+gr_nx 128
+gr_ngc 5
 gr_xbeg 0.0
 gr_xend 1.0
 
 # problem specific physical IC
 sim_shockLoc1 0.5
-sim_densL 1.0
+sim_densL 3.0
 sim_velxL 0.0 #-2. #0.
-sim_presL 1.0 #0.4 #1.
-sim_densR 0.125 #0.125
+sim_presL 3.0 #0.4 #1.
+sim_densR 1.0 #0.125
 sim_velxR 0.0 #0.
-sim_presR 0.1 #0.1
+sim_presR 1.0 #0.1
 sim_gamma 1.4
 sim_smallPres 1.e-12
 

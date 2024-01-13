@@ -16,6 +16,6 @@ module grid_data
   real, allocatable, dimension(:,:,:) :: gr_reigvc ! right eigenvectors
   real, allocatable, dimension(:,:,:) :: gr_leigvc ! left  eigenvectors
 
-  real, allocatable, dimension(:) :: predictions ! left  eigenvectors
+  integer, allocatable, dimension(:) :: predictions ! predictions
 
 end module grid_data
