@@ -5,7 +5,7 @@
 sim_name 'sod_fog'
 IC_type "user"
 sim_cfl 0.4
-sim_tmax 1.8
+sim_tmax 2.5
 sim_nStep 100000
 sim_riemann 'roe'
 sim_limiter 'vanLeer'
@@ -13,7 +13,7 @@ sim_charLimiting .true.
 sim_order 7
 
 # grid variables
-gr_nx 128
+gr_nx 512
 gr_ngc 2
 gr_xbeg -4.5
 gr_xend 4.5
