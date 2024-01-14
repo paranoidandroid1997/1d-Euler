@@ -7,6 +7,7 @@ subroutine soln_NN(dt)
     use slopeLimiter
     use eigensystem
     use NN
+    use ftorch
 
     implicit none
     real, intent(IN) :: dt
@@ -24,10 +25,26 @@ subroutine soln_NN(dt)
 
     integer :: classification
 
-    real(kind = 8), dimension(20, 1) :: input
+    !real(kind = 4), dimension(20, 1) :: input
     real(kind = 8), dimension(gr_imax) :: scaledPres
     real(kind = 8), dimension(gr_imax) :: div
     real(kind = 8) :: minPres, maxPres
+
+
+    type(torch_module) :: model
+    integer, parameter :: n_inputs = 1
+    type(torch_tensor), dimension(n_inputs) :: model_input_arr
+    type(torch_tensor) :: model_output
+    real(kind = 4), dimension(20,1), target  :: input
+    real(kind = 4), dimension(1, 2), target   :: output
+
+    ! Set up number of dimensions of input tensor and axis order
+    integer, parameter :: in_dims = 2
+    integer :: in_layout(in_dims) = [1,2]
+    integer, parameter :: out_dims = 2
+    integer :: out_layout(out_dims) = [1, 2]
+
+    model = torch_module_load("./models/nn-02/script-nn-02.pt")
 
     minPres = minval(gr_V(PRES_VAR, :))
     maxPres = maxval(gr_V(PRES_VAR, :))
@@ -48,7 +65,23 @@ subroutine soln_NN(dt)
         input(6:10,1) = gr_V(VELX_VAR, (i - 2):(i + 2))
         input(11:15,1) = gr_V(PRES_VAR, (i - 2):(i + 2))
         input(16:20,1) = div((i - 2):(i + 2))
-        call classify(input, classification)
+        ! call classify(input, classification)
+        !call classify_ftorch(input, classification)
+
+        model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
+        model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
+
+        call torch_module_forward(model, model_input_arr, n_inputs, model_output)
+
+        if (output(1, 1) >= output(1, 2)) then
+            classification = 0
+        else
+            classification = 1
+        end if
+
+        call torch_tensor_delete(model_input_arr(1))
+        call torch_tensor_delete(model_output)
+
         predictions(i) = classification
 
         if (classification == 1 ) then
@@ -148,6 +181,8 @@ subroutine soln_NN(dt)
 
         end if
     end do
+
+    call torch_module_delete(model)
     
     
     return

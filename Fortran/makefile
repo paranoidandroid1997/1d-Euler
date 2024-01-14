@@ -1,12 +1,21 @@
 FC	= gfortran
 
 LDFLAGS = -framework accelerate
+LDFLAGS += -L./FTorchInstall/lib -lftorch
+
 
 FFLAGS_OPT = -ggdb -O3 -fdefault-real-8 -fdefault-double-8\
         -ffree-line-length-none -Wuninitialized -fimplicit-none
 
-FFLAGS_DEBUG = -ggdb  -g -fdefault-real-8 -fdefault-double-8\
+#FFLAGS_DEBUG = -ggdb  -g -fdefault-real-8 -fdefault-double-8\
         -ffree-line-length-none -Wuninitialized -fimplicit-none
+	
+
+FFLAGS_DEBUG = -ggdb  -g \
+        -ffree-line-length-none -Wuninitialized -fimplicit-none
+
+FFLAGS_DEBUG += -I./FTorchInstall/include/ftorch
+
 
 
 

@@ -13,3 +13,10 @@ slugEuler1d
 .venv
 
 fort.*
+
+libtorch
+FTorch
+FTorchInstall
+libftorch*
+
+__pycache__

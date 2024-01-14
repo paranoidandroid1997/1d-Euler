@@ -1,4 +1,6 @@
 module NN
+    use ftorch
+
     implicit none
 
     contains
@@ -75,9 +77,43 @@ module NN
 
     end subroutine classify
 
-    subroutine classify_ftorch(input, classification)
-        real(kind = 8), intent(inout), dimension(20,1) :: input
+    subroutine classify_ftorch(input_in, classification)
+        real(kind = 4), intent(inout), dimension(20,1) :: input_in
         integer, intent(out) :: classification
+
+        type(torch_module) :: model
+        integer, parameter :: n_inputs = 1
+        type(torch_tensor), dimension(n_inputs) :: model_input_arr
+        type(torch_tensor) :: model_output
+        real(kind = 4), dimension(1,20), target  :: input
+        real(kind = 4), dimension(1, 2), target   :: output
+
+        ! Set up number of dimensions of input tensor and axis order
+        integer, parameter :: in_dims = 2
+        integer :: in_layout(in_dims) = [1,2]
+        integer, parameter :: out_dims = 2
+        integer :: out_layout(out_dims) = [1, 2]
+
+        model = torch_module_load("./models/nn-02/script-nn-02.pt")
+
+        input(1,:) = input_in(:,1)
+
+        model_input_arr(1) = torch_tensor_from_array(input, in_layout, torch_kCPU)
+        model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
+
+        call torch_module_forward(model, model_input_arr, n_inputs, model_output)
+        
+
+        if (output(1, 1) >= output(1, 2)) then
+            classification = 0
+        else
+            classification = 1
+        end if
+
+        call torch_module_delete(model)
+        call torch_tensor_delete(model_input_arr(1))
+        call torch_tensor_delete(model_output)
+
 
     end subroutine classify_ftorch
 
