@@ -62,9 +62,13 @@ subroutine soln_NN(dt)
         ! predictions(i) = classification
 
         input(1:5,1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+        input(1:5,1) = input(1:5,1) - (sum(input(1:5,1))/ 5.0)
         input(6:10,1) = gr_V(VELX_VAR, (i - 2):(i + 2))
+        input(6:10,1) = input(6:10,1) - (sum(input(6:10,1))/ 5.0)
         input(11:15,1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+        input(11:15,1) = input(11:15,1) - (sum(input(11:15,1))/5.0)
         input(16:20,1) = div((i - 2):(i + 2))
+        input(16:20,1) = input(16:20,1) - (sum(input(16:20,1))/5.0)
         ! call classify(input, classification)
         !call classify_ftorch(input, classification)
 
@@ -73,7 +77,8 @@ subroutine soln_NN(dt)
 
         call torch_module_forward(model, model_input_arr, n_inputs, model_output)
 
-        if (output(1, 1) >= output(1, 2)) then
+        !if (output(1, 1) >= output(1, 2)) then
+        if (output(1, 1) >= 0.3) then
             classification = 0
         else
             classification = 1
