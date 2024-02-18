@@ -5,7 +5,7 @@
 sim_name 'sod_fog'
 IC_type "sod"
 sim_cfl 0.8 
-sim_tmax 0.2
+sim_tmax 1.0
 sim_nStep 100000
 sim_riemann 'hll'
 sim_limiter 'minmod'

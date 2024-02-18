@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     #for r in range(0, numRuns):
     # for r in range(0, numRuns):
-    for r in range(22, 23):
+    for r in range(30, 31):
         # Clean the current output
         os.chdir("../Fortran/data/")
         os.system("rm *.dat")
@@ -65,13 +65,19 @@ if __name__ == "__main__":
         A = np.loadtxt(datFiles[0])
         x = A[:, 0]
 
-        fig, axs = plt.subplots(3,1, figsize=(16,8))
+        fig, axs = plt.subplots(4,1, figsize=(16,8))
         for i, (symbol, ax) in enumerate(zip(primitiveVarSymbols, axs.flatten())):
-            ax.grid()
-            ax.set_xlabel("X", size=16)
-            ax.set_ylabel(symbol, size=16)
-            ax.set_ylim([np.min(A[:, i + 1] - 1.0), np.max(A[:, i + 1]) + 1.0])
+            if i != 3:
+                ax.grid()
+                ax.set_xlabel("X", size=16)
+                ax.set_ylabel(symbol, size=16)
+                ax.set_ylim([np.min(A[:, i + 1]) - 1.0, np.max(A[:, i + 1]) + 1.0])
+            #ax.set_ylim([np.min(A[:, i + 1] - 5.0), np.max(A[:, i + 1]) + 25.0])
         lines = [axs[i].plot(x, A[:, i + 1], linestyle="--", markerfacecolor="none")[0] for i in range(0, 3)]
+        div = np.zeros(len(A[:,2]))
+        div[1:-1] = (A[2:, 2] - A[0:-2, 2])/(2 * 1/512)
+        axs[3].set_ylim([np.min(div) - 1.0, np.max(div) + 1.0])
+        lines.append(axs[3].plot(x,div)[0])
         points0 = [axs[0].plot(x_val, var_val, marker='o', markeredgecolor="blue", markerfacecolor="none")[0] for x_val, var_val in zip(x, A[:, 1])]
         points1 = [axs[1].plot(x_val, var_val, marker='o', markeredgecolor="blue", markerfacecolor="none")[0] for x_val, var_val in zip(x, A[:, 2])]
         points2 = [axs[2].plot(x_val, var_val, marker='o', markeredgecolor="blue", markerfacecolor="none")[0] for x_val, var_val in zip(x, A[:, 3])]
@@ -86,18 +92,27 @@ if __name__ == "__main__":
             x = A[:, 0]
             preds = A[:,-1]
 
-            for i, (line, points) in enumerate(zip(lines, pointss)):
-                var = A[:, (i + 1)]
-                line.set_ydata(var)
-                for point, var_val, pred in zip(points, A[:, (i+1)], preds):
-                    if (pred == 1):
-                        c = "red"
-                    else:
-                        c = "blue"
-                    point.set_ydata(var_val)
-                    point.set_markeredgecolor(c)
+            div = np.zeros(len(A[:,2]))
+            #print( (A[2:, 2] - A[0:-2, 2]))
+            div[1:-1] = (A[2:, 2] - A[0:-2, 2])/(2 * 1/512)
 
-            return lines[0], lines[1], lines[2]
+            lines[3].set_ydata(div)
+
+            for i, (line, points, ax) in enumerate(zip(lines, pointss, axs.flatten())):
+                if i!=3:
+                    var = A[:, (i + 1)]
+                    line.set_ydata(var)
+                    ax.set_ylim([np.min(var) - 1.0, np.max(var) + 1.0])
+                    for point, var_val, pred in zip(points, A[:, (i+1)], preds):
+                        if (pred == 1):
+                            c = "red"
+                        else:
+                            c = "blue"
+                        point.set_ydata(var_val)
+                        point.set_markeredgecolor(c)
+
+            axs[3].set_ylim([np.min(div) - 5.0, 0])
+            return lines[0], lines[1], lines[2], lines[3]
 
 
 

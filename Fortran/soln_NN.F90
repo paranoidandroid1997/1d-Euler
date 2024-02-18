@@ -19,7 +19,7 @@ subroutine soln_NN(dt)
     real, dimension(NSYS_VAR) :: vecL,vecR,sigL,sigR
     integer :: kWaveNum
     real :: lambdaDtDx
-    real, dimension(NUMB_VAR)  :: delV,delL,delR
+    real, dimension(NUMB_VAR)  :: delV,delL,delR, delC
     real, dimension(NUMB_WAVE) :: delW
     integer :: nVar
 
@@ -29,6 +29,7 @@ subroutine soln_NN(dt)
     real(kind = 8), dimension(gr_imax) :: scaledPres
     real(kind = 8), dimension(gr_imax) :: div
     real(kind = 8) :: minPres, maxPres
+    real(kind = 8) :: meanDens, meanVel, meanPres, meanDiv, stdDens, stdVel, stdPres, stdDiv
 
 
     type(torch_module) :: model
@@ -44,6 +45,8 @@ subroutine soln_NN(dt)
     integer, parameter :: out_dims = 2
     integer :: out_layout(out_dims) = [1, 2]
 
+    integer :: l
+
     model = torch_module_load("./models/nn-02/script-nn-02.pt")
 
     minPres = minval(gr_V(PRES_VAR, :))
@@ -53,6 +56,17 @@ subroutine soln_NN(dt)
 
     div = 0
     div(2:(gr_imax - 1)) = (gr_V(VELX_VAR, 3:gr_imax) - gr_V(VELX_VAR, 1:(gr_imax - 2)))/(2.0 * gr_dx)
+
+    meanDens = sum(gr_V(DENS_VAR,:))/size(gr_V(DENS_VAR,:))
+    meanPres = sum(gr_V(PRES_VAR,:))/size(gr_V(PRES_VAR,:))
+    meanVel = sum(gr_V(VELX_VAR,:))/size(gr_V(VELX_VAR,:))
+    meanDiv = sum(div)/size(div)
+
+    stdDens = sqrt((1.0/size(gr_V(DENS_VAR,:))) * sum((gr_V(DENS_VAR,:) - meanDens)**2))
+    stdPres = sqrt((1.0/size(gr_V(PRES_VAR,:))) * sum((gr_V(PRES_VAR,:) - meanPres)**2))
+    stdVel = sqrt((1.0/size(gr_V(VELX_VAR,:))) * sum((gr_V(VELX_VAR,:) - meanVel)**2))
+    stdDiv = sqrt((1.0/size(div)) * sum((div - meanDiv)**2))
+
     
     do i = gr_ibeg-1, gr_iend+1
 
@@ -62,32 +76,43 @@ subroutine soln_NN(dt)
         ! predictions(i) = classification
 
         input(1:5,1) = gr_V(DENS_VAR, (i - 2):(i + 2))
-        input(1:5,1) = input(1:5,1) - (sum(input(1:5,1))/ 5.0)
+        input(1:5,1) = (input(1:5,1) - meanDens)/stdDens
         input(6:10,1) = gr_V(VELX_VAR, (i - 2):(i + 2))
-        input(6:10,1) = input(6:10,1) - (sum(input(6:10,1))/ 5.0)
+        input(6:10,1) = (input(6:10,1) - meanVel)/stdVel
         input(11:15,1) = gr_V(PRES_VAR, (i - 2):(i + 2))
-        input(11:15,1) = input(11:15,1) - (sum(input(11:15,1))/5.0)
+        input(11:15,1) = (input(11:15,1) - meanPres)/stdPres
         input(16:20,1) = div((i - 2):(i + 2))
-        input(16:20,1) = input(16:20,1) - (sum(input(16:20,1))/5.0)
+        input(16:20,1) = (input(16:20,1) - meanDiv)/stdDiv
         ! call classify(input, classification)
         !call classify_ftorch(input, classification)
+        do l = i - 2, i + 2 
+            !if (div(l) >= -gr_dx**2) then
+            if (.False.) then
+                classification = 0 
+            else
+                model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
+                model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
 
-        model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
-        model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
+                call torch_module_forward(model, model_input_arr, n_inputs, model_output)
 
-        call torch_module_forward(model, model_input_arr, n_inputs, model_output)
+                !if (output(1, 1) >= output(1, 2)) then
+                output(1,:) = output(1,:) - maxval(output(1,:))
+                if (exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2))) >= 0.99) then
+                    classification = 1.0
+                else
+                    !print *, exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2)))
+                    !print *, output
+                    classification = 0.0
+                end if
 
-        !if (output(1, 1) >= output(1, 2)) then
-        if (output(1, 1) >= 0.3) then
-            classification = 0
-        else
-            classification = 1
-        end if
+                call torch_tensor_delete(model_input_arr(1))
+                call torch_tensor_delete(model_output)
+            endif
+                predictions(i) = classification
 
-        call torch_tensor_delete(model_input_arr(1))
-        call torch_tensor_delete(model_output)
+        end do
 
-        predictions(i) = classification
+        
 
         if (classification == 1 ) then
             !print *, "shock"
@@ -116,6 +141,8 @@ subroutine soln_NN(dt)
                         call vanLeer(delL(nVar),delR(nVar),delV(nVar))
                     elseif (sim_limiter == 'mc') then
                         call mc(delL(nVar),delR(nVar),delV(nVar))
+                    elseif (sim_limiter == "center") then
+                        delV(nVar) = gr_V(nVar, i + 1) - gr_V(nVar,i - 1)
                     endif
                 enddo
                 ! project primitive delta to characteristic vars
@@ -128,6 +155,7 @@ subroutine soln_NN(dt)
             do kWaveNum = 1, NUMB_WAVE
                 delL(DENS_VAR:PRES_VAR) = gr_V(DENS_VAR:PRES_VAR,i  )-gr_V(DENS_VAR:PRES_VAR,i-1)
                 delR(DENS_VAR:PRES_VAR) = gr_V(DENS_VAR:PRES_VAR,i+1)-gr_V(DENS_VAR:PRES_VAR,i) 
+                delC(DENS_VAR:PRES_VAR) = gr_V(DENS_VAR:PRES_VAR,i+1)-gr_V(DENS_VAR:PRES_VAR,i - 1)  
                 if (sim_limiter == 'minmod') then
                 call minmod(dot_product(leig(DENS_VAR:PRES_VAR, kWaveNum), delL(DENS_VAR:PRES_VAR)), &
                 &dot_product(leig(DENS_VAR:PRES_VAR, kWaveNum), delR(DENS_VAR:PRES_VAR)), delW(kWaveNum))
@@ -137,6 +165,8 @@ subroutine soln_NN(dt)
                 elseif (sim_limiter == 'mc') then
                 call mc(dot_product(leig(DENS_VAR:PRES_VAR, kWaveNum), delL(DENS_VAR:PRES_VAR)), &
                 &dot_product(leig(DENS_VAR:PRES_VAR, kWaveNum), delR(DENS_VAR:PRES_VAR)), delW(kWaveNum))
+                elseif(sim_limiter == "center") then
+                  delW(kWaveNum) = 0.5*dot_product(leig(DENS_VAR:PRES_VAR, kWaveNum), delC(DENS_VAR:PRES_VAR))
                 endif
             end do
             endif
