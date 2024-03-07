@@ -1,19 +1,18 @@
 subroutine soln_ReconEvolveAvg(dt)
 
-#include "definition.h"  
+#include "definition.h"
 
-  use grid_data
-  use sim_data
+    use grid_data
+    use sim_data
 
-  implicit none
-  real, intent(IN) :: dt
+    implicit none
+    real, intent(IN) :: dt
 
-  ! conservative left and right states
-  real, dimension(NSYS_VAR,gr_imax) :: uL, uR
+    ! conservative left and right states
+    real, dimension(NSYS_VAR, gr_imax) :: uL, uR
 
+    call soln_reconstruct(dt)
+    call soln_getFlux()
 
-  call soln_reconstruct(dt)
-  call soln_getFlux()
-
-  return
+    return
 end subroutine soln_ReconEvolveAvg
