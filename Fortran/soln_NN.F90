@@ -85,32 +85,32 @@ subroutine soln_NN(dt)
         input(16:20,1) = (input(16:20,1) - meanDiv)/stdDiv
         ! call classify(input, classification)
         !call classify_ftorch(input, classification)
-        do l = i - 2, i + 2 
+        !do l = i - 2, i + 2 
             !if (div(l) >= -gr_dx**2) then
-            if (.False.) then
-                classification = 0 
+        if (.False.) then
+            classification = 0 
+        else
+            model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
+            model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
+
+            call torch_module_forward(model, model_input_arr, n_inputs, model_output)
+
+            !if (output(1, 1) >= output(1, 2)) then
+            output(1,:) = output(1,:) - maxval(output(1,:))
+            if (exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2))) >= 0.99) then
+                classification = 1.0
             else
-                model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
-                model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
+                !print *, exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2)))
+                !print *, output
+                classification = 0.0
+            end if
 
-                call torch_module_forward(model, model_input_arr, n_inputs, model_output)
+            call torch_tensor_delete(model_input_arr(1))
+            call torch_tensor_delete(model_output)
+        endif
+            predictions(i) = classification
 
-                !if (output(1, 1) >= output(1, 2)) then
-                output(1,:) = output(1,:) - maxval(output(1,:))
-                if (exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2))) >= 0.99) then
-                    classification = 1.0
-                else
-                    !print *, exp(output(1,2))/(exp(output(1,1)) + exp(output(1,2)))
-                    !print *, output
-                    classification = 0.0
-                end if
-
-                call torch_tensor_delete(model_input_arr(1))
-                call torch_tensor_delete(model_output)
-            endif
-                predictions(i) = classification
-
-        end do
+        !end do
 
         
 
