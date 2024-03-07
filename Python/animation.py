@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     #for r in range(0, numRuns):
     # for r in range(0, numRuns):
-    for r in range(30, 31):
+    for r in range(32, 33):
         # Clean the current output
         os.chdir("../Fortran/data/")
         os.system("rm *.dat")
@@ -106,6 +106,8 @@ if __name__ == "__main__":
                     for point, var_val, pred in zip(points, A[:, (i+1)], preds):
                         if (pred == 1):
                             c = "red"
+                        elif (pred == 2):
+                            c = "pink"
                         else:
                             c = "blue"
                         point.set_ydata(var_val)

@@ -41,13 +41,14 @@ OBJS  = driver_euler1d.o \
 	soln_PPM.o \
 	NN_mod.o \
 	soln_NN.o \
+	soln_NN2.o \
 	hll.o \
 	roe.o \
 	bc.o \
 	cfl.o \
 	eigensystem.o \
 	averageState.o \
-	slopeLimiter.o
+	slopeLimiter.o \
 
 ########################################################################################
 #COMPILING AND LINKING USING GENERIC SUFFIX RULE FOR F90
@@ -102,6 +103,7 @@ soln_FOG.o		: grid_data.o
 soln_PLM.o		: grid_data.o sim_data.o slopeLimiter.o eigensystem.o
 soln_PPM.o		: grid_data.o sim_data.o slopeLimiter.o eigensystem.o
 soln_NN.o		: grid_data.o sim_data.o slopeLimiter.o eigensystem.o NN_mod.o
+soln_NN2.o		: grid_data.o sim_data.o slopeLimiter.o eigensystem.o NN_mod.o
 
 
 #######################################################################################

@@ -16,6 +16,8 @@ subroutine soln_reconstruct(dt)
         call soln_PPM(dt)
     elseif (sim_order == 7) then
         call soln_NN(dt)
+    elseif (sim_order == 8) then
+        call soln_NN2(dt)
     end if
 
     return
