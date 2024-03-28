@@ -8,7 +8,9 @@ if __name__ == "__main__":
 
     #for r in range(0, numRuns):
     # for r in range(0, numRuns):
-    for r in range(32, 33):
+    #for r in range(32, 33):
+    #for r in range(25, 26):
+    for r in range(25, 26):
         # Clean the current output
         os.chdir("../Fortran/data/")
         os.system("rm *.dat")

@@ -23,6 +23,7 @@ EXE_FILE = slugEuler1d
 
 OBJS  = driver_euler1d.o \
 	read_initFile.o\
+	NN_mod.o \
 	sim_data.o  \
 	sim_init.o \
 	sim_initBlock.o \
@@ -39,7 +40,6 @@ OBJS  = driver_euler1d.o \
 	soln_FOG.o \
 	soln_PLM.o \
 	soln_PPM.o \
-	NN_mod.o \
 	soln_NN.o \
 	soln_NN2.o \
 	hll.o \

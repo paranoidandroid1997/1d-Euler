@@ -3,43 +3,39 @@
 
 # sim variables
 sim_name 'sod_fog'
-IC_type "sim_blast2"
-sim_cfl 0.9 
-sim_tmax 0.038
+IC_type "user"
+sim_cfl 0.9
+sim_tmax 1.8
 sim_nStep 100000
 sim_riemann 'hll'
 sim_limiter 'center'
 sim_charLimiting .true.
-sim_order 8
+sim_order 7
 
 sim_norm_limiter 'center'
 sim_contact_limiter 'center'
 sim_shock_limiter 'center'
-sim_shock_method 'plm'
+sim_shock_method 'center'
 
 # grid variables
 gr_nx 512
 gr_ngc 2
-gr_xbeg 0.0
-gr_xend 1.0
+gr_xbeg -4.5
+gr_xend 4.5
 
 # problem specific physical IC
-sim_shockLoc1 0.1
-sim_shockLoc2 0.9
-sim_densL 1.0
-sim_velxL 0.0
-sim_presL 1000.0
-sim_densM 1.0
-sim_velxM 0.0
-sim_presM 0.01
+sim_shockLoc1 -4.0
+sim_densL 3.857143
+sim_velxL 2.629369 
+sim_presL 10.33333
 sim_densR 1.0
-sim_velxR 0.0
-sim_presR 100.0
+sim_velxR 0.0 
+sim_presR 1.0
 sim_gamma 1.4
 sim_smallPres 1.e-12
 
 # BC type
-sim_bcType 'reflect'
+sim_bcType 'user'
 
 # IO frequency
 sim_ioTfreq 0.01 #real

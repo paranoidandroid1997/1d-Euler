@@ -8,7 +8,7 @@ sim_cfl 0.8
 sim_tmax 0.15
 sim_nStep 100000
 sim_riemann 'hll'
-sim_limiter 'minmod'
+sim_limiter 'center'
 sim_charLimiting .true.
 sim_order 7
 

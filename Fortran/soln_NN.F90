@@ -35,8 +35,10 @@ subroutine soln_NN(dt)
     integer, parameter :: n_inputs = 1
     type(torch_tensor), dimension(n_inputs) :: model_input_arr
     type(torch_tensor) :: model_output
-    real(kind=4), dimension(20, 1), target  :: input
+    !real(kind=4), dimension(20, 1), target  :: input
     real(kind=4), dimension(1, 2), target   :: output
+
+    real(kind=8), dimension(20, 1) :: input
 
     ! Set up number of dimensions of input tensor and axis order
     integer, parameter :: in_dims = 2
@@ -66,7 +68,8 @@ subroutine soln_NN(dt)
     stdDiv = sqrt((1.0/size(div))*sum((div - meanDiv)**2))
 
     do i = gr_ibeg - 1, gr_iend + 1
-
+        !print *, fc1w
+        !stop
         ! input(1:7,1) = scaledPres((i - 3):(i + 3 + 1))
         ! input(8, 1) = gr_dx
         ! call classify(input, classification)
@@ -86,7 +89,7 @@ subroutine soln_NN(dt)
         !if (div(l) >= -gr_dx**2) then
         if (.False.) then
             classification = 0
-        else
+        else if (.False.) then
             model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
             model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
 
@@ -104,6 +107,8 @@ subroutine soln_NN(dt)
 
             call torch_tensor_delete(model_input_arr(1))
             call torch_tensor_delete(model_output)
+        else
+            call classify(input, classification)
         end if
         predictions(i) = classification
 

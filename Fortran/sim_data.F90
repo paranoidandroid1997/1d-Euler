@@ -7,7 +7,7 @@ module sim_data
   !! numerics
     real, save :: sim_cfl, sim_tmax, sim_outputIntervalTime
     integer, save :: sim_order, sim_nStep
-    character(len=MAX_STRING_LENGTH), save :: sim_name, sim_limiter, sim_riemann, IC_type
+    character(len=MAX_STRING_LENGTH), save :: sim_name, sim_limiter, sim_riemann, IC_type, sim_shock_limiter, sim_norm_limiter, sim_contact_limiter, sim_shock_method
     logical, save :: sim_charLimiting
 
   !! ICs
