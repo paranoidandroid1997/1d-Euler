@@ -10,7 +10,7 @@ if __name__ == "__main__":
     # for r in range(0, numRuns):
     #for r in range(32, 33):
     #for r in range(25, 26):
-    for r in range(41, 46):
+    for r in range(25, 26):
         # Clean the current output
         os.chdir("../Fortran/data/")
         os.system("rm *.dat")
@@ -115,7 +115,8 @@ if __name__ == "__main__":
                         point.set_ydata(var_val)
                         point.set_markeredgecolor(c)
 
-            axs[3].set_ylim([np.min(div) - 5.0, 0])
+            axs[3].set_ylim([-5.0, 5.0])
+            #axs[3].set_ylim([np.min(div) - 5.0, 0])
             return lines[0], lines[1], lines[2], lines[3]
 
 

@@ -12,6 +12,7 @@ subroutine soln_NN(dt)
    implicit none
    real, intent(IN) :: dt
    integer :: i
+   integer, save :: count = 0
 
    real, dimension(NUMB_WAVE) :: lambda
    real, dimension(NSYS_VAR, NUMB_WAVE) :: reig, leig
@@ -29,7 +30,8 @@ subroutine soln_NN(dt)
    real(kind=8), dimension(gr_imax) :: scaledPres
    real(kind=8), dimension(gr_imax) :: div
    real(kind=8) :: minPres, maxPres
-   real(kind=8) :: meanDens, meanVel, meanPres, meanDiv, stdDens, stdVel, stdPres, stdDiv
+   !real(kind=8) :: meanDens, meanVel, meanPres, meanDiv, stdDens, stdVel, stdPres, stdDiv
+   real(kind=8), save :: meanDens, meanVel, meanPres, meanDiv, stdDens, stdVel, stdPres, stdDiv
 
    type(torch_module) :: model
    integer, parameter :: n_inputs = 1
@@ -48,48 +50,39 @@ subroutine soln_NN(dt)
 
    integer :: l
 
-   model = torch_module_load("./models/nn-02/script-nn-02.pt")
+   ! Line to load model if using Ftorch
+   !model = torch_module_load("./models/nn-02/script-nn-02.pt")
 
-   minPres = minval(gr_V(PRES_VAR, :))
-   maxPres = maxval(gr_V(PRES_VAR, :))
-   scaledPres = -1.0 + (scaledPres - minPres)*2.0/(maxPres - minPres)
-
+   ! Global normalization vars
    div = 0
    div(2:(gr_imax - 1)) = (gr_V(VELX_VAR, 3:gr_imax) - gr_V(VELX_VAR, 1:(gr_imax - 2)))/(2.0*gr_dx)
-
-   meanDens = sum(gr_V(DENS_VAR, :))/size(gr_V(DENS_VAR, :))
-   meanPres = sum(gr_V(PRES_VAR, :))/size(gr_V(PRES_VAR, :))
-   meanVel = sum(gr_V(VELX_VAR, :))/size(gr_V(VELX_VAR, :))
    meanDiv = sum(div)/size(div)
-
-   stdDens = sqrt((1.0/size(gr_V(DENS_VAR, :)))*sum((gr_V(DENS_VAR, :) - meanDens)**2))
-   stdPres = sqrt((1.0/size(gr_V(PRES_VAR, :)))*sum((gr_V(PRES_VAR, :) - meanPres)**2))
-   stdVel = sqrt((1.0/size(gr_V(VELX_VAR, :)))*sum((gr_V(VELX_VAR, :) - meanVel)**2))
    stdDiv = sqrt((1.0/size(div))*sum((div - meanDiv)**2))
 
+   if (count == 0) then
+      meanDens = sum(gr_V(DENS_VAR, :))/size(gr_V(DENS_VAR, :))
+      meanPres = sum(gr_V(PRES_VAR, :))/size(gr_V(PRES_VAR, :))
+      meanVel = sum(gr_V(VELX_VAR, :))/size(gr_V(VELX_VAR, :))
+      stdDens = sqrt((1.0/size(gr_V(DENS_VAR, :)))*sum((gr_V(DENS_VAR, :) - meanDens)**2))
+      stdPres = sqrt((1.0/size(gr_V(PRES_VAR, :)))*sum((gr_V(PRES_VAR, :) - meanPres)**2))
+      stdVel = sqrt((1.0/size(gr_V(VELX_VAR, :)))*sum((gr_V(VELX_VAR, :) - meanVel)**2))
+   end if
+   
    do i = gr_ibeg - 1, gr_iend + 1
-      !print *, fc1w
-      !stop
-      ! input(1:7,1) = scaledPres((i - 3):(i + 3 + 1))
-      ! input(8, 1) = gr_dx
-      ! call classify(input, classification)
-      ! predictions(i) = classification
-
-      input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
-      input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
-      input(6:10, 1) = gr_V(VELX_VAR, (i - 2):(i + 2))
-      input(6:10, 1) = (input(6:10, 1) - meanVel)/stdVel
-      input(11:15, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
-      input(11:15, 1) = (input(11:15, 1) - meanPres)/stdPres
-      input(16:20, 1) = div((i - 2):(i + 2))
-      input(16:20, 1) = (input(16:20, 1) - meanDiv)/stdDiv
-      ! call classify(input, classification)
-      !call classify_ftorch(input, classification)
-      !do l = i - 2, i + 2
-      !if (div(l) >= -gr_dx**2) then
-      if (.False.) then
-         classification = 0
+      !if (.False.) then
+      if (div(i) >= 0) then
+         classification = 2
       else if (.False.) then
+         ! Local normalization
+         input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+         input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
+         input(6:10, 1) = gr_V(VELX_VAR, (i - 2):(i + 2))
+         input(6:10, 1) = (input(6:10, 1) - meanVel)/stdVel
+         input(11:15, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+         input(11:15, 1) = (input(11:15, 1) - meanPres)/stdPres
+         input(16:20, 1) = div((i - 2):(i + 2))
+         input(16:20, 1) = (input(16:20, 1) - meanDiv)/stdDiv
+
          model_input_arr(1) = torch_tensor_from_array(transpose(input), in_layout, torch_kCPU)
          model_output = torch_tensor_from_array(output, out_layout, torch_kCPU)
 
@@ -108,6 +101,16 @@ subroutine soln_NN(dt)
          call torch_tensor_delete(model_input_arr(1))
          call torch_tensor_delete(model_output)
       else
+         ! Local normalization
+         input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+         input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
+         input(6:10, 1) = gr_V(VELX_VAR, (i - 2):(i + 2))
+         input(6:10, 1) = (input(6:10, 1) - meanVel)/stdVel
+         input(11:15, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+         input(11:15, 1) = (input(11:15, 1) - meanPres)/stdPres
+         input(16:20, 1) = div((i - 2):(i + 2))
+         input(16:20, 1) = (input(16:20, 1) - meanDiv)/stdDiv
+
          call classify(input, classification)
       end if
       predictions(i) = classification
@@ -216,7 +219,8 @@ subroutine soln_NN(dt)
       end if
    end do
 
-   call torch_module_delete(model)
+   ! Uncomment if using Ftorch
+   !call torch_module_delete(model)
 
    return
 end subroutine soln_NN

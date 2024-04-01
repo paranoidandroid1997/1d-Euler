@@ -78,7 +78,12 @@ if __name__ == "__main__":
 
     ax.plot(x, dens, linestyle = "--", label = labels[0])
     for xv, d, p in zip(x, dens, preds):
-        c = "red" if p else "blue"
+        if (p == 1):
+            c = "red"
+        elif (p == 2):
+            c = "pink"
+        else:
+            c = "blue"
         ax.plot(xv, d, markerfacecolor = "none", markeredgecolor=c, marker='o')
     
     for i in range(1, 4):
@@ -105,7 +110,12 @@ if __name__ == "__main__":
     ax = axs.flatten()[0]
     ax.plot(x, dens, linestyle = "--", label = labels[0])
     for xv, d, p in zip(x, dens, preds):
-        c = "red" if p else "blue"
+        if (p == 1):
+            c = "red"
+        elif (p == 2):
+            c = "pink"
+        else:
+            c = "blue"
         ax.plot(xv, d, markerfacecolor = "none", markeredgecolor=c, marker='o')
     ax.grid()
     ax.legend()
