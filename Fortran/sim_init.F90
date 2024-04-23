@@ -22,10 +22,10 @@ subroutine sim_init()
       call read_initFileChar('slug.init', 'sim_shock_method', sim_shock_method)
    end if
 
-   call read_wb(20, 20, "./models/nn-02/w-b/fc1w.txt", "fc1w")
-   call read_wb(20, 1, "./models/nn-02/w-b/fc1b.txt", "fc1b")
-   call read_wb(2, 20, "./models/nn-02/w-b/fc2w.txt", "fc2w")
-   call read_wb(2, 1, "./models/nn-02/w-b/fc2b.txt", "fc2b")
+   call read_wb(nsize, nsize, "./models/nn-02/w-b/reduced/fc1w.txt", "fc1w")
+   call read_wb(nsize, 1, "./models/nn-02/w-b/reduced/fc1b.txt", "fc1b")
+   call read_wb(2, nsize, "./models/nn-02/w-b/reduced/fc2w.txt", "fc2w")
+   call read_wb(2, 1, "./models/nn-02/w-b/reduced/fc2b.txt", "fc2b")
 
    call read_initFileChar('slug.init', 'sim_name', sim_name)
    call read_initFileBool('slug.init', 'sim_charLimiting', sim_charLimiting)

@@ -42,7 +42,7 @@ for i in inputs:
     print(f"IC: {ic}")
     # Execute the command and capture its output
 
-    num_meas = 10
+    num_meas = 20
     total_elapsed_time = 0.0
     for _ in range(num_meas):
         start_time = time.time()

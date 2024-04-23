@@ -40,7 +40,7 @@ subroutine soln_NN(dt)
    !real(kind=4), dimension(20, 1), target  :: input
    real(kind=4), dimension(1, 2), target   :: output
 
-   real(kind=8), dimension(20, 1) :: input
+   real(kind=8), dimension(nsize, 1) :: input
 
    ! Set up number of dimensions of input tensor and axis order
    integer, parameter :: in_dims = 2
@@ -54,11 +54,15 @@ subroutine soln_NN(dt)
    !model = torch_module_load("./models/nn-02/script-nn-02.pt")
 
    ! Global normalization vars
+
+   ! Update Divergence data at every time step
    div = 0
    div(2:(gr_imax - 1)) = (gr_V(VELX_VAR, 3:gr_imax) - gr_V(VELX_VAR, 1:(gr_imax - 2)))/(2.0*gr_dx)
    meanDiv = sum(div)/size(div)
    stdDiv = sqrt((1.0/size(div))*sum((div - meanDiv)**2))
 
+
+   ! Update dens/pres/vel data at first time step
    if (count == 0) then
       meanDens = sum(gr_V(DENS_VAR, :))/size(gr_V(DENS_VAR, :))
       meanPres = sum(gr_V(PRES_VAR, :))/size(gr_V(PRES_VAR, :))
@@ -70,8 +74,11 @@ subroutine soln_NN(dt)
    
    do i = gr_ibeg - 1, gr_iend + 1
       !if (.False.) then
+
+      ! Divergence flag
       if (div(i) >= 0) then
-         classification = 2
+         classification = 0
+      ! For FTorch
       else if (.False.) then
          ! Local normalization
          input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
@@ -100,28 +107,40 @@ subroutine soln_NN(dt)
 
          call torch_tensor_delete(model_input_arr(1))
          call torch_tensor_delete(model_output)
+      ! For w + b s
       else
          ! Local normalization
-         input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
-         input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
-         input(6:10, 1) = gr_V(VELX_VAR, (i - 2):(i + 2))
-         input(6:10, 1) = (input(6:10, 1) - meanVel)/stdVel
-         input(11:15, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
-         input(11:15, 1) = (input(11:15, 1) - meanPres)/stdPres
-         input(16:20, 1) = div((i - 2):(i + 2))
-         input(16:20, 1) = (input(16:20, 1) - meanDiv)/stdDiv
+         
+         ! Non reduced
+         if (.False.) then
+            input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+            input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
+            input(6:10, 1) = gr_V(VELX_VAR, (i - 2):(i + 2))
+            input(6:10, 1) = (input(6:10, 1) - meanVel)/stdVel
+            input(11:15, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+            input(11:15, 1) = (input(11:15, 1) - meanPres)/stdPres
+            input(16:20, 1) = div((i - 2):(i + 2))
+            input(16:20, 1) = (input(16:20, 1) - meanDiv)/stdDiv
+         end if
+         ! Reduced
+         if (.True.) then
+            input(1:5, 1) = gr_V(DENS_VAR, (i - 2):(i + 2))
+            input(1:5, 1) = (input(1:5, 1) - meanDens)/stdDens
+            input(6:10, 1) = gr_V(PRES_VAR, (i - 2):(i + 2))
+            input(6:10, 1) = (input(6:10, 1) - meanPres)/stdPres
+         end if
 
          call classify(input, classification)
       end if
       predictions(i) = classification
 
-      !end do
-
+      ! If shock, do FOG
       if (classification == 1) then
          !print *, "shock"
          gr_vL(DENS_VAR:GAME_VAR, i) = gr_V(DENS_VAR:GAME_VAR, i)
          gr_vR(DENS_VAR:GAME_VAR, i) = gr_V(DENS_VAR:GAME_VAR, i)
 
+      ! Else, use PLM
       else
          ! we need conservative eigenvectors
          conservative = .false.

@@ -113,6 +113,7 @@ if __name__ == "__main__":
         if (p == 1):
             c = "red"
         elif (p == 2):
+            print("hll")
             c = "pink"
         else:
             c = "blue"
